@@ -1,0 +1,283 @@
+<!doctype html">
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" >
+    <title>Robot M1 - Groupe u161</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="js/robot.js"></script>
+    <script type="text/javascript" src="js/map.js"></script>
+    <link rel="stylesheet" href="js/ol/ol.css" type="text/css">
+    <script src="js/ol/ol.js"></script>
+
+    <style>
+        .map {
+          height: 800px;
+          width: 800px;
+          margin: auto;
+        }
+      </style>
+</head>
+
+<body>
+    <div class="container p-3 my-3 border">
+        <h1>Projet Robotique Mobile</h1>
+    </div>
+
+    <br><br>
+    <div class="container">
+        <h4>Activation des programmes de communication robot/serveur</h4>
+        <br>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Client/Serveur</th>
+                    <th>Contrôle</th>
+                    <th>Valeur</th>
+                    <th>Temps</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Serveur Web</td>
+                    <td>
+                        <button type="button" class="btn btn-success" 
+                        onclick='set_check("ON")'
+                        >On</button>
+                        <button type="button" class="btn btn-danger" 
+                        onclick='set_check("OFF")'
+                        >Off</button>
+                        <button type="button" class="btn btn-info" 
+                        onclick='set_check("")'
+                        >Info</button>
+                    </td>
+                        
+                    <td>
+                        <span id="check-info"></span>
+                    </td>
+                    <td>
+                        <span id="check-count"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Serveur Websocket</td>
+                    <td>
+                        <button type="button" class="btn btn-success" 
+                        onclick='$("#serveur-websocket-info").html("");web_message("serveur-websocket-on")'
+                        >On</button>
+                        <button type="button" class="btn btn-danger" 
+                        onclick='$("#serveur-websocket-info").html("");web_message("serveur-websocket-off")'
+                        >Off</button>
+                        <button type="button" class="btn btn-info" 
+                        onclick='$("#serveur-websocket-info").html("");web_message("serveur-websocket-info")'
+                        >Info</button>
+                    </td>
+                    <td>
+                        <span id="serveur-websocket-info"></span>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Client Websocket robot</td>
+                    <td>
+                        <button type="button" class="btn btn-success" 
+                        onclick='$("#client-websocket-robot-info").html("");web_message("client-websocket-robot-on")'
+                        >On</button>
+                        <button type="button" class="btn btn-danger" 
+                        onclick='$("#client-websocket-robot-info").html("");web_message("client-websocket-robot-off")'
+                        >Off</button>
+                        <button type="button" class="btn btn-info" 
+                        onclick='$("#client-websocket-robot-info").html("");web_message("client-websocket-robot-info")'
+                        >Info</button>
+                    </td>
+                    <td>
+                        <span id="client-websocket-robot-info"></span>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Client Websocket IHM</td>
+                    <td>
+                        <button type="button" class="btn btn-success" 
+                        onclick='$("#client-websocket-ihm-info").html("ON");ws_open()'
+                        >On</button>
+                        <button type="button" class="btn btn-danger" disable
+                        onclick='alert("Client websocket OFF désactivé")'
+                        >Off</button>
+                        <button type="button" class="btn btn-info" disable
+                        onclick='alert("Client websocket INFO désactivé")'
+                        >Info</button>
+                    </td>
+                    <td>
+                        <span id="client-websocket-ihm-info">OFF</span>
+                    </td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <br><br>
+    <div class="container">
+        <h4>Commande du robot</h4>
+        <br>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Contrôle</th>
+                    <th>Valeur</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Allumage</td>
+                    <td>
+                        <button type="button" class="btn btn-success" 
+                        onclick='ws_send("robot-on")'
+                        >On</button>
+                        <button type="button" class="btn btn-danger" 
+                        onclick='ws_send("robot-off")'
+                        >Off</button>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Initialisation positionnement</td>
+                    <td>
+                        <button type="button" class="btn btn-info" 
+                        onclick='initPos()'
+                        >Positionner le robot</button>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Direction</td>
+                    <td>
+                        <button type="button" class="btn btn-secondary" 
+                        onclick='ws_send("avant"); bool = 1;'
+                        >Avant</button>
+                        <button type="button" class="btn btn-secondary" disable
+                        onclick='ws_send("arriere"); bool = 1;'
+                        >Arrière</button>
+                        <button type="button" class="btn btn-secondary" disable
+                        onclick='ws_send("droite"); bool = 2;'
+                        >Droite</button>
+                        <button type="button" class="btn btn-secondary" disable
+                        onclick='ws_send("gauche"); bool = 2;'
+                        >Gauche</button>
+                        <button type="button" class="btn btn-secondary" 
+                        onclick='ws_send("nop"); bool = 2;'
+                        >Nop</button>
+                    </td>
+                    <td>
+                        <span id="robot-info"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button type="button" class="btn btn-secondary" 
+                        onclick='dirAngle(359); ws_send("nop");'
+                        >Nord</button>
+                         <button type="button" class="btn btn-secondary" 
+                        onclick='distVoulu(100); ws_send("nop");'
+                        >Avancer 1m</button>
+                        <button type="button" class="btn btn-secondary" 
+                        onclick='obstacle(); ws_send("nop");'
+                        >Arret obstacle</button>
+                        <button type="button" class="btn btn-secondary" 
+                        onclick='tourSalle();'
+                        >Tour salle</button>
+                        <button type="button" class="btn btn-danger" 
+                        onclick='stop()'
+                        >Stop</button>
+                    </td>
+                    
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Information utiles</td>
+                    <td>
+                        <button type="button" class="btn btn-info" 
+                        onclick='$("#batterie").html("");ws_send("bat")'
+                        >Batterie</button>
+                        <button type="button" class="btn btn-info" 
+                        onclick='ws_send("charger")'
+                        >Charger</button>
+                    </td>
+                    <td>
+                        Batterie :
+                        <span id="batterie"></span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <br><br>
+    <div class="container">
+        <h4>Valeurs des capteurs</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Capteurs</th>
+                    <th>Valeurs</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Angle du robot (0-359) :</td>
+                    <td><span id="angle"></span></td>
+                </tr>
+                <tr>
+                    <td>Distance obstacles (cm) :</td>
+                    <td><span id="distance"></span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <br><br>
+    <div class="container">
+        <h4>Position du robot</h4>
+        <div>
+            <h5>GPS (valeurs en degrés) :</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Coordonnée</th>
+                        <th>Valeurs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Longitude :</td>
+                        <td><span id="lon"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Latitude :</td>
+                        <td><span id="lat"></span></td>
+                    </tr>
+                </tbody>
+            </table>
+          </div>
+        <br>
+        <div id="map" class="map"></div>
+    </div>
+    
+    <br><br><br>
+    <div class="jumbotron text-center" style="margin-bottom:0">
+        <p>Site créé pour un projet de robotique dans le cadre d'une UE de Robotique sur une base de M. Yvon AUTRET :</p>
+        <p>Alan LE BOUDEC, Clément LE BOT, Timothé LANNUZEL & William PENSEC</p>
+        <p>Étudiant Master 1 Informatique</p>
+        <p>Université Bretagne Occidentale - Brest</p>
+        <p> 2020 </p>
+    </div>
+</body>
+
+</html>

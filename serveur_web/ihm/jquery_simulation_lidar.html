@@ -1,0 +1,67 @@
+<!doctype html">
+<html lang="fr">
+
+<head>
+<meta charset="utf-8" >
+
+<title>Simulation lidar</title>
+
+
+<script type="text/javascript" src="./js/jquery/jquery.min.js"></script>
+
+
+<script type="text/javascript">
+
+// fonction exécutée au chargement de la page
+$(document).ready(function () {
+	simuler_lidar()
+});
+
+// création des messages pour les échanges robot-ihm
+function message(srce,dest,cmd,arg) {
+    if(typeof arg === 'undefined') arg = ""
+ 	var bloc = {
+			srce : srce,
+			dest : dest,
+			cmd : cmd,
+			arg : arg,
+			time : new Date().getTime()
+		}
+	return bloc;
+}
+
+function simuler_lidar() {
+
+	// on récupère les secondes et on les utilise
+	// comme si c'était une distance fournie par le lidar
+	var dist = new Date().getSeconds()
+
+	// envoi d'un message
+	// on simule l'envoi d'un message du robot vers l'ihm
+	traiter_message(message("robot","ihm","info",{dist : dist}))
+
+	// on rappelle la fonction simuler_lidar au bout de 1000 ms
+	setTimeout(() => {
+		simuler_lidar()
+	}, 1000)
+
+}
+
+// affiche la valeur de "dist" dans la page web
+function traiter_message(mess) {
+	// on modifie le contenu html du bloc <span id="dist"></span>
+	$("#dist").html(mess.arg.dist)
+}
+
+</script>
+
+
+</head>
+
+<body>
+
+	Distance (cm) : <span id="dist"></span>
+
+</body>
+
+</html>

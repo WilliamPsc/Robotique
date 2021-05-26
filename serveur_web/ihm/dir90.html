@@ -1,0 +1,101 @@
+
+// cette fonction est remplacée par go
+function check_ws() {
+	// ws_send("nop");
+	// setTimeout(() => {
+	// 	check_ws()		
+	// }, 1000);
+
+}
+
+// nouvelle version de l'écouteur websocket
+// on ajoute un appel à go quand un message websocket arrive
+
+ws.addEventListener('message', event => {
+    console.log('Received:', event.data);
+    if (event.data.indexOf("{") >= 0) {
+      try {
+          var o = JSON.parse(event.data)
+          if (o.dest == "ihm") {
+              $("#robot-info").html(o.arg.mess+" ("+((new Date().getTime()) - o.time)+" ms)")
+              $('#angle').html(o.arg.angle)
+              $('#dist').html(o.arg.dist)
+              $('#bat').html(o.arg.bat)
+              go() // go n'est appelée que d'ici
+              
+          }
+      }
+      catch (e) {}
+  }
+});
+
+// consignes
+
+var exec_go = 0
+// 0 : go ne s'exécute plus ; 1 : go peut s'exécuter
+
+var angle_dest = null
+// si angle est non nul, angle contient la direction dans laquelle on veut placer le robot
+
+// La fonction go décide quelle commande exécuter
+// en fonction des consignes
+
+function go() {
+	if (exec_go == 0) {
+		// le robot a atteint sa destination
+
+		// on annule les consignes
+		angle_dest = null
+
+		// pour continuer d'afficher les valeurs des capteurs 
+		// après l'arrêt du robot il faut renvoyer un nop
+		setTimeout(() => {
+			ws_send("nop")	
+		}, 1000);
+		
+		return
+	}
+
+	try {
+		var angle = parseInt($("#angle").html())
+		console.log("angle = "+angle)
+		if (angle_dest != null) {
+			if ((angle > angle_dest - 20) && (angle < angle_dest + 5)) {
+				// on a atteint la destination
+                // on arrête le robot
+                // bug : ne marche pas si angle_dest voisin de 0
+				exec_go = 0
+				ws_send("nop")	
+			}
+			else {
+				setTimeout(() => {
+					ws_send("droite")	
+				}, 200);
+			}
+		}
+	}
+	catch (e) {
+		// on tente de relancer go en envoyant un nop
+		setTimeout(() => {
+			ws_send("nop")	
+		}, 1000);
+	}
+}
+
+function dir90() {
+	angle_dest = 90 // on veut orienter le robot plein est (90°)
+	exec_go = 1 // on laisse go s'exécuter
+}
+
+function stop() {
+	exec_go = 0
+}
+
+<!-- boutons à ajouter -->
+
+<button type="button" class="btn btn-primary" 
+onclick='dir90()'
+>Dir 90</button>
+<button type="button" class="btn btn-primary" 
+onclick='stop()'
+>Stop</button>

@@ -1,0 +1,186 @@
+<!doctype html">
+<html lang="fr">
+
+<head>
+<meta charset="utf-8" >
+
+<title>Test OpenLayers</title>
+
+
+<script type="text/javascript" src="js/jquery/jquery.min.js"></script>
+
+<link rel="stylesheet" href="js/ol/ol.css" type="text/css">
+<script src="js/ol/ol.js"></script>
+
+
+<style>
+	.map {
+	  height: 800px;
+	  width: 800px;
+	}
+  </style>
+  
+  <script type="text/javascript">
+
+	// coordonnées GPS du centre de la carte
+	var lon = -4.501078;
+	var lat = 48.400727;
+
+	var zoom = 20;
+
+	var map = null;
+
+	var marqueurRobot = {
+		layer : null,
+		icon : 'img/marqueur_R_32.png',
+		lon : null,
+		lat : null,
+		dir : 0,
+	}
+	  
+	$(document).ready(function () {
+		  //alert("init");
+		  initMap();
+
+		  marqueurRobot.lon = -4.501128
+		  marqueurRobot.lat = 48.400606
+
+		  
+		  marqueurRobot.layer = tracerMarqueur(
+			  [{lon:marqueurRobot.lon,lat:marqueurRobot.lat,txt:""}],
+			  "MarqueurRobot",
+			  marqueurRobot.icon,
+			  0.7,	// opacité
+			  16 
+				  // on a comme marqueur un disque de 32 pixels de diamètre
+				  // on déplace le marqueur de 16 pixels vers le bas pour que
+				  // le centre du cercle corresponde à la position du marqueur
+			)
+
+		  testBougerMarqueur()
+
+	  });
+	  
+	  function testBougerMarqueur() {
+		marqueurRobot.lon += 0.00002
+		marqueurRobot.lat += 0.00001
+		marqueurRobot.dir += 10
+
+		deplacerMarqueur(marqueurRobot.layer,marqueurRobot.lon,marqueurRobot.lat,marqueurRobot.dir)
+
+		setTimeout(() => {
+			testBougerMarqueur()		
+		}, 1000);
+	  }
+
+	  function initMap() {
+		map = new ol.Map({
+			target: 'map',
+			layers: [
+			  new ol.layer.Tile({
+				source: new ol.source.OSM()
+			  })
+			],
+			view: new ol.View({
+			  //center: ol.proj.fromLonLat([lon, lat]),
+			  center : ol.proj.transform([lon, lat], 'EPSG:4326', 'EPSG:3857'),
+			  projection: 'EPSG:3857',
+			  zoom: zoom
+			})
+		  });
+
+		  // EPSG:4326 : code pour les coordonnées GPS (voir WGS-84)
+		  // on utilise 2 angles, longitude et latitude
+
+		  // EPSG:3857 : code pour les coordonnées Mercator
+		  // on utilise des coordonnées projetées.
+		  // La projection Mercator utilise une projection cylindrique.
+		  // La projection Mercator a été utilisée pour la première fois en 1569
+		  // par Geraldus Mercator, géographe flamand
+		  // les coordonnées sont exprimées en mètres
+		
+			
+	  }
+
+	  function tracerMarqueur(lm,nom,icon,opa,posY) {
+		// lm : liste des marqueurs à créer
+		// nom : nom de la liste des marqueurs
+		// icon : png du marqueur
+		// opa : opacité
+		// posY : positionnement du marqueur sur l'axe vertical
+
+
+		var vectorSource = new ol.source.Vector({
+		  //create empty vector
+		});
+
+		lm.forEach (function(m) {
+				vectorSource.addFeature(new ol.Feature({
+					geometry : new ol.geom.Point(ol.proj.transform([m.lon, m.lat], 'EPSG:4326',     
+					'EPSG:3857')),
+					txt : m.txt
+				}));
+
+		});
+		
+		var image = new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+					anchor: [0.5, posY],
+					anchorXUnits: 'fraction',
+					anchorYUnits: 'pixels',
+					opacity: opa,
+					src: icon
+				}));
+		
+
+
+		
+		var vectorLayer = new ol.layer.Vector({
+			source : vectorSource,
+			name : nom,
+			style: new ol.style.Style({
+					image: image
+						})
+		});
+		//polyLayer.set('name','rrrr');
+
+		map.addLayer(vectorLayer);
+		// map.addOverlay(vectorLayer);
+
+		//alert(polyLayer.get('name'));
+		
+
+		return vectorLayer;
+		
+		//return vectorSource.getFeatures()[0];
+		// retourne le premier marqueur
+
+
+	  }
+
+	  function deplacerMarqueur(marqueurLayer,lon,lat,dir) {
+		// mettre le marqueur à la position (lon,lat) et dans la direction dir
+
+		// on prend le premier marqueur dans la source
+		marqueurLayer.getSource().getFeatures()[0].setGeometry(new ol.geom.Point(ol.proj.transform([lon, lat], 
+			'EPSG:4326', 'EPSG:3857')));
+
+		marqueurLayer.getStyle().getImage().setRotation(dir * 0.01745329251);
+
+		marqueurLayer.changed();
+		
+	  }
+
+	
+  </script>
+  
+</head>
+<body>
+
+  <h2>Affichage d'un marqueur (lettre R qui tourne pour indiquer la direction courante)</h2>
+  
+ 
+  <div id="map" class="map"></div>
+
+ 
+</body>
+</html>
